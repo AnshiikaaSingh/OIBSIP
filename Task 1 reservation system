@@ -1,0 +1,163 @@
+
+/*CREATE THE DATA STRUCTURE FIRST OF ALL*/ 
+
+CREATE DATABASE ReservationSystem;
+
+USE ReservationSystem;
+
+CREATE TABLE Users (
+    userId INT PRIMARY KEY AUTO_INCREMENT,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE Reservations (
+    pnrNumber INT PRIMARY KEY AUTO_INCREMENT,
+    username VARCHAR(50),
+    trainNumber VARCHAR(50),
+    trainName VARCHAR(50),
+    classType VARCHAR(20),
+    journeyDate DATE,
+    fromPlace VARCHAR(50),
+    toPlace VARCHAR(50),
+    FOREIGN KEY (username) REFERENCES Users(username)
+);
+
+
+
+
+
+
+
+
+/* JAVA CODE */
+import java.sql.*;
+import java.util.Scanner;
+
+public class OnlineReservationSystem {
+    private static Connection connect() {
+        String url = "jdbc:mysql://localhost:3306/ReservationSystem"; // Adjust your URL
+        String user = "yourUsername"; // Replace with your database username
+        String password = "yourPassword"; // Replace with your database password
+
+        try {
+            return DriverManager.getConnection(url, user, password);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("Welcome to the Online Reservation System");
+        
+        // User Login
+        System.out.print("Enter Username: ");
+        String username = scanner.nextLine();
+        System.out.print("Enter Password: ");
+        String password = scanner.nextLine();
+
+        if (login(username, password)) {
+            System.out.println("Login Successful!");
+            // Show reservation or cancellation options here
+        } else {
+            System.out.println("Invalid username or password.");
+        }
+        
+        scanner.close();
+    }
+
+    private static boolean login(String username, String password) {
+        try (Connection conn = connect()) {
+            String sql = "SELECT * FROM Users WHERE username = ? AND password = ?";
+            PreparedStatement pstmt = conn.prepareStatement(sql);
+            pstmt.setString(1, username);
+            pstmt.setString(2, password);
+            ResultSet rs = pstmt.executeQuery();
+
+            return rs.next();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+}
+    private static void makeReservation(String username) {
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("Enter Train Number: ");
+        String trainNumber = scanner.nextLine();
+        System.out.print("Enter Train Name: ");
+        String trainName = scanner.nextLine();
+        System.out.print("Enter Class Type: ");
+        String classType = scanner.nextLine();
+        System.out.print("Enter Date of Journey (YYYY-MM-DD): ");
+        String date = scanner.nextLine();
+        System.out.print("From Place: ");
+        String fromPlace = scanner.nextLine();
+        System.out.print("To Place: ");
+        String toPlace = scanner.nextLine();
+
+        try (Connection conn = connect()) {
+            String sql = "INSERT INTO Reservations (username, trainNumber, trainName, classType, journeyDate, fromPlace, toPlace) VALUES (?, ?, ?, ?, ?, ?, ?)";
+            PreparedStatement pstmt = conn.prepareStatement(sql);
+            pstmt.setString(1, username);
+            pstmt.setString(2, trainNumber);
+            pstmt.setString(3, trainName);
+            pstmt.setString(4, classType);
+            pstmt.setString(5, date);
+            pstmt.setString(6, fromPlace);
+            pstmt.setString(7, toPlace);
+            pstmt.executeUpdate();
+            System.out.println("Reservation made successfully!");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void cancelReservation() {
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("Enter PNR Number to cancel: ");
+        int pnrNumber = scanner.nextInt();
+
+        try (Connection conn = connect()) {
+            String sql = "DELETE FROM Reservations WHERE pnrNumber = ?";
+            PreparedStatement pstmt = conn.prepareStatement(sql);
+            pstmt.setInt(1, pnrNumber);
+            int rowsAffected = pstmt.executeUpdate();
+
+            if (rowsAffected > 0) {
+                System.out.println("Reservation canceled successfully!");
+            } else {
+                System.out.println("PNR not found.");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+if (login(username, password)) {
+    System.out.println("Login Successful!");
+    boolean running = true;
+
+    while (running) {
+        System.out.println("1. Make Reservation");
+        System.out.println("2. Cancel Reservation");
+        System.out.println("3. Exit");
+        System.out.print("Choose an option: ");
+        int choice = scanner.nextInt();
+
+        switch (choice) {
+            case 1:
+                makeReservation(username);
+                break;
+            case 2:
+                cancelReservation();
+                break;
+            case 3:
+                running = false;
+                break;
+            default:
+                System.out.println("Invalid option. Please try again.");
+        }
+    }
+}
